@@ -27,7 +27,15 @@ endif()
 # Otherwise, set OUTPUT_FOLDER manually if you'd like:
 # set(OUTPUT_FOLDER "C:/path/to/any/folder")
 
-find_package(CommonLibSSE CONFIG REQUIRED)
+# CommonLibSSE-NG is vendored as a git submodule (extern/commonlibsse-ng, pinned to a tag)
+# rather than pulled from vcpkg: the only vcpkg-hosted copy available is unmaintained and
+# doesn't recognize newer Skyrim runtimes. This builds it from source as part of our own
+# project instead.
+set(BUILD_TESTS OFF CACHE BOOL "Disable CommonLibSSE-NG's own test suite" FORCE)
+set(SKSE_SUPPORT_XBYAK ON CACHE BOOL "Enable trampoline support for function hooking" FORCE)
+add_subdirectory(extern/commonlibsse-ng)
+include(extern/commonlibsse-ng/cmake/CommonLibSSE.cmake) # add_commonlibsse_plugin() isn't auto-included for source builds
+
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES plugin.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 target_precompile_headers(${PROJECT_NAME} PRIVATE PCH.h)
