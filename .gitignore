@@ -1,0 +1,18 @@
+# IDE / editor
+.idea
+.vs
+.vscode/settings.json
+
+# Build output
+out
+build
+install
+cmake-build*
+*.dll
+*.pdb
+
+# vcpkg
+vcpkg_installed
+
+# Skyrim archive files
+*.bsa
