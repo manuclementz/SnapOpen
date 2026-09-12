@@ -1,0 +1,5 @@
+CompileFlags:
+  # clangd only reads one compile_commands.json; the debug and release
+  # presets' compiler flags only differ by optimization/NDEBUG, so debug's
+  # is close enough for the whole project.
+  CompilationDatabase: build/debug
