@@ -2,9 +2,15 @@ using namespace SKSE;
 using namespace SKSE::log;
 
 namespace {
-    // High enough that the animation is over in a couple frames without visibly "popping",
-    // low enough it doesn't skip the odd sound/particle keyframe entirely.
-    constexpr float kFastAnimationSpeed = 20.0f;
+    // High enough that the whole animation resolves within a single rendered frame instead
+    // of visibly playing out over a few - the point isn't "fast", it's "no perceptible
+    // transition at all". Still goes through the engine's normal update loop underneath, so
+    // any sound/script hook tied to a keyframe still fires, just all within that one frame.
+    constexpr float kFastAnimationSpeed = 1000.0f;
+
+    // Practically instant without being exactly 0 - some engines treat a hard zero as a
+    // degenerate case in fade/easing math, so this stays just on the safe side of that.
+    constexpr float kDoorFadeSeconds = 0.0001f;
 
     // Doors/containers don't animate through the Havok behavior graph like actors do - they're
     // driven by plain NiControllerSequences hanging off the loaded 3D. frequency is the engine's
@@ -42,6 +48,20 @@ namespace {
 
         auto destination = teleport->teleportData->linkedDoor.get();
         return destination && destination->GetParentCell() != a_door.GetParentCell();
+    }
+
+    // Shortens the fade-to-black transition load doors trigger. This is an .ini setting
+    // (normally Skyrim.ini's [General] fNormalDoorFadeSecs), but every RE::Setting the engine
+    // knows about can be read/written from code too - no need to make users hand-edit a file.
+    void ShortenDoorFadeTransition() {
+        auto* setting = RE::INISettingCollection::GetSingleton()->GetSetting("fNormalDoorFadeSecs:General");
+        if (!setting) {
+            log::warn("fNormalDoorFadeSecs setting not found; door fade-to-black keeps its default duration.");
+            return;
+        }
+
+        setting->SetFloat(kDoorFadeSeconds);
+        log::info("fNormalDoorFadeSecs set to {}.", setting->GetFloat());
     }
 
     // Fires whenever a reference in the world gets activated - opening a door, opening a
@@ -148,6 +168,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     log::info("{} {} is loading...", plugin->GetName(), plugin->GetVersion());
 
     Init(skse);
+    ShortenDoorFadeTransition();
     InitializeMessaging();
 
     log::info("{} has finished loading.", plugin->GetName());
