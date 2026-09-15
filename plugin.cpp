@@ -10,7 +10,13 @@ namespace {
 
     // Practically instant without being exactly 0 - some engines treat a hard zero as a
     // degenerate case in fade/easing math, so this stays just on the safe side of that.
-    constexpr float kDoorFadeSeconds = 0.0001f;
+    // Used for fades going INTO a loading screen.
+    constexpr float kInstantFadeSeconds = 0.0001f;
+
+    // Fades coming OUT of a loading screen get this instead: cutting straight to a fully
+    // rendered scene the instant loading finishes reads as a jarring flash rather than a
+    // snappy transition, so these stay short but still perceptible.
+    constexpr float kSlightFadeSeconds = 0.3f;
 
     // Doors/containers don't animate through the Havok behavior graph like actors do - they're
     // driven by plain NiControllerSequences hanging off the loaded 3D. frequency is the engine's
@@ -50,18 +56,33 @@ namespace {
         return destination && destination->GetParentCell() != a_door.GetParentCell();
     }
 
-    // Shortens the fade-to-black transition load doors trigger. This is an .ini setting
-    // (normally Skyrim.ini's [General] fNormalDoorFadeSecs), but every RE::Setting the engine
-    // knows about can be read/written from code too - no need to make users hand-edit a file.
-    void ShortenDoorFadeTransition() {
-        auto* setting = RE::INISettingCollection::GetSingleton()->GetSetting("fNormalDoorFadeSecs:General");
+    // Every setting the engine reads from Skyrim.ini is also a live RE::Setting object we can
+    // read/write from code - no need to make users hand-edit a file themselves.
+    void SetINIFloat(std::string_view a_settingName, float a_value) {
+        auto* setting = RE::INISettingCollection::GetSingleton()->GetSetting(a_settingName);
         if (!setting) {
-            log::warn("fNormalDoorFadeSecs setting not found; door fade-to-black keeps its default duration.");
+            log::warn("INI setting {} not found; leaving it at its default.", a_settingName);
             return;
         }
 
-        setting->SetFloat(kDoorFadeSeconds);
-        log::info("fNormalDoorFadeSecs set to {}.", setting->GetFloat());
+        setting->SetFloat(a_value);
+        log::info("{} set to {}.", a_settingName, setting->GetFloat());
+    }
+
+    void ShortenLoadingTransitions() {
+        for (auto settingName : {
+                 "fNormalDoorFadeSecs:General"sv,
+                 "fAutoDoorFadeSecs:General"sv,
+                 "fNormalDoorFadeWait:General"sv,
+                 "fLoadGameFadeSecs:General"sv,
+                 "fFastTravelFadeSecs:General"sv,
+             }) {
+            SetINIFloat(settingName, kInstantFadeSeconds);
+        }
+
+        for (auto settingName : {"fFadeToBlackFadeSeconds:General"sv, "fMinSecondsForLoadFadeIn:General"sv}) {
+            SetINIFloat(settingName, kSlightFadeSeconds);
+        }
     }
 
     // Fires whenever a reference in the world gets activated - opening a door, opening a
@@ -168,7 +189,7 @@ SKSEPluginLoad(const LoadInterface* skse) {
     log::info("{} {} is loading...", plugin->GetName(), plugin->GetVersion());
 
     Init(skse);
-    ShortenDoorFadeTransition();
+    ShortenLoadingTransitions();
     InitializeMessaging();
 
     log::info("{} has finished loading.", plugin->GetName());
