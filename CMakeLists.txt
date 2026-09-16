@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 3.21)
 
 # [BEGIN set_project_name]
-project(FastOpenAnimations VERSION 0.1.0 LANGUAGES CXX)
+project(FastOpenAnimations VERSION 1.0.0 LANGUAGES CXX)
 # [END set_project_name]
 
 # #
