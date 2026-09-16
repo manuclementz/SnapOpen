@@ -1,4 +1,4 @@
-# FastOpenAnimations
+# SnapOpen
 
 Speeds up door and container opening (animation + the loading-screen fades around it in case of doors), making each pretty much instantaneous.
 
@@ -11,7 +11,7 @@ Built on [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG) (submodu
 
 ## Config
 
-`FastOpenAnimations.ini`, next to the dll:
+`SnapOpen.ini`, next to the dll:
 
 - `bOverrideFadeSettings` - also shortens a bunch of Skyrim.ini fade/loading durations. 0 to disable overriding the ini.
 - `bExperimentalNPCDoors` - speeds doors up for NPCs too. Off by default, needs more testing.

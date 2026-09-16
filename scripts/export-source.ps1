@@ -8,7 +8,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $root = Resolve-Path "$PSScriptRoot\.."
-$projectName = "FastOpenAnimations"
+$projectName = "SnapOpen"
 
 $cmakeLists = Get-Content "$root\CMakeLists.txt" -Raw
 if ($cmakeLists -notmatch 'VERSION\s+(\d+\.\d+\.\d+)') {
