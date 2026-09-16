@@ -1,47 +1,55 @@
-[left][color=#ffffff][size=6][b]SnapOpen[/b][/size][/color][/left]
-[i][size=4]Doors and containers open (almost) instantly. No mesh edits, no animation replacers, nothing to fight with your other mods for the same files.[/size][/i]
-
-[img width=640](add a screenshot or, better, a short gif of a door/chest snapping open here)[/img]
-
+[center][img width=649]https://staticdelivery.nexusmods.com/mods/1704/images/192078/192078-1789586245-1369992434.png[/img][/center]
+[center][color=#ffffff][size=6][b]Snap Open - Instant doors and containers animations[/b][/size][/color][/center]
+[center][i][size=4]Doors and containers open instantly.[/size][/i][/center]
+[center][i][size=3] [/size][/i][/center]
+[center][color=#ffffff][size=6][b][img width=464]https://staticdelivery.nexusmods.com/mods/1704/images/192078/192078-1789588908-1918917491.gif[/img][/b][/size][/color][img width=464]https://staticdelivery.nexusmods.com/mods/1704/images/192078/192078-1789588801-1768754947.gif[/img][/center]
 [size=4][b]How it works[/b][/size]
 [list]
-[*]Speeds up the actual opening animation for doors and containers, so it plays out in a fraction of a second instead of the usual second-plus creak.[/*]
-[*]Only touches doors that actually load into a new cell - a "double door" or other same-room prop stays untouched, exactly as vanilla.[/*]
-[*]Optionally also trims several Skyrim.ini loading-screen fade durations (door fades, save-load fades, fast travel), so the whole transition feels snappier, not just the animation.[/*]
-[*]Everything is set via a plain .ini file next to the plugin, sensible defaults out of the box.[/*]
+[*]Speeds up the actual opening animation for doors and containers, so it plays instantly instead of the usual lengthy animation. Yes, I like Morrowind, how did you guess ?[/*]
+[*]Only touches doors that actually load into a new cell.[/*]
+[*]Optionally also shortens several Skyrim.ini loading screen fade durations[/*]
+[*]Settings accessible in ini file next to the plugin[/*]
+[*][color=#008000][b]Safe to install, update, or remove at any point in a playthrough.[/b][/color][/*]
 [/list]
-
-[color=#008000][b]Safe to install, update, or remove at any point in a playthrough - it's stateless: no new records, no scripts, nothing written to your save.[/b][/color]
 
 [size=4][b]Installation[/b][/size]
 Install with your mod manager like any other SKSE plugin. Requires:
 [list]
-[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url], matching your game version[/*]
-[*][url=https://skse.silverlock.org/]SKSE64[/url][/list]
-Works on both Skyrim SE/AE 1.6.1170 and 1.7.104 from the same download - no separate version to pick.
+[*][url=https://skse.silverlock.org/]SKSE64[/url][/*]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url][/*]
+[/list]
+Compatible with both Skyrim SE/AE 1.6.1170 and 1.7.104, thanks to greater minds than my own.
 
 [b][size=4]Configuration[/size][/b]
-[font=Courier New]SnapOpen.ini[/font] (next to the plugin, under SKSE/Plugins) has two settings:
+[font=Courier New]SnapOpen.ini[/font] (located next to the plugin, under SKSE/Plugins) has two settings :
 [list]
 [*][font=Courier New]bOverrideFadeSettings[/font] : also shortens the Skyrim.ini fade/loading durations mentioned above. Set to 0 to leave your own Skyrim.ini alone. On by default.[/*]
-[*][font=Courier New]bExperimentalNPCDoors[/font] : also speeds up doors when NPCs use them, not just you. Off by default - untested for side effects on AI/scripts that expect the door to take a moment.[/*]
+[*][font=Courier New]bExperimentalNPCDoors[/font] : also speeds up doors when NPCs use them, not just you. Off by default for the time being, I need to test it a bit more to be sure it doesn't break anything.[/*]
 [/list]
-The animation/fade speeds themselves aren't configurable on purpose - they're tuned to feel instant without skipping any sound or script cues, and exposing them felt more likely to cause "why is this glitchy" reports than to help anyone.
-
 [b][size=4]But... why?[/size][/b]
-The existing solutions for this are mostly mesh/behavior edits, which work but turn into a constant source of conflicts with anything else touching the same doors or containers. Doing it in code instead means it just works alongside whatever else you've got installed. This was also my first real C++/SKSE plugin - wanted to actually learn how CommonLibSSE-NG works under the hood rather than just installing other people's mods.
+I like doors to be fast, and I don't like staring at long-winded animations. I also like looting quickly but don't like Quickloot. Hence this.
+The existing solutions for this (see Credits) are mesh/behavior edits, which work but can create conflicts and require some patching. This plugin should handle all doors and containers without any of that.
 
-[b][size=4]Known issues and limitations[/size][/b]
+[size=4][b]Known issues and limitations[/b][/size]
 [list]
-[*]Doesn't touch the container/inventory menu's own opening animation (that's Scaleform/Flash UI, not something this kind of plugin can reach) or the book-reading animation (a whole separate Havok behavior graph). If those bother you too, look for a UI overhaul for the former and there are dedicated mods for the latter.[/*]
-[*]bExperimentalNPCDoors is exactly that - experimental. Report anything weird you see with it on.[/*]
+[*][size=3]Might not play well with any mod that unpauses container menus (like [url=https://www.nexusmods.com/skyrimspecialedition/mods/27859]Skyrim Souls[/url])[/size][/*]
+[*][size=3]Not extensively tested with [url=https://www.nexusmods.com/skyrimspecialedition/mods/120075]Quickloot[/url] as I don't use that[/size][/*]
 [/list]
 
 [size=4][b]Credits[/b][/size]
 [list]
-[*][url=https://github.com/alandtse]alandtse[/url] for the actively-maintained [url=https://github.com/alandtse/CommonLibSSE-NG]CommonLibSSE-NG[/url] fork this is built on, and [url=https://github.com/CharmedBaryon]CharmedBaryon[/url]/[url=https://github.com/Ryan-rsm-McKenzie]Ryan McKenzie[/url] before that.[/*]
-[*][url=https://www.nexusmods.com/profile/meh321]meh321[/url] for [url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url], without which no SKSE plugin would survive a game update.[/*]
-[*][url=https://www.nexusmods.com/profile/Uzuki14]Uzuki14[/url] for [url=https://www.nexusmods.com/skyrimspecialedition/mods/184146]QuickDoor[/url], which proved the "just crank the animation playback speed" approach for doors and pointed me at the right technique.[/*]
+[*][url=https://www.nexusmods.com/profile/Skjiisa]Skjiisa[/url] for the trusty [url=https://www.nexusmods.com/skyrimspecialedition/mods/1125]Get on with it[/url], which does the same thing for doors via mesh replacement[/*]
+[*][url=https://www.nexusmods.com/profile/Corsafire1]Corsafire1[/url] for [url=https://www.nexusmods.com/skyrimspecialedition/mods/6851]Instant Container Access[/url], which does the same thing for containers via mesh replacement[/*]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]meh321[/url] for [url=https://www.nexusmods.com/skyrimspecialedition/mods/32444]Address Library for SKSE Plugins[/url], without which this would not exist.[/*]
+[*][url=https://github.com/alandtse]alandtse[/url] for [url=https://github.com/alandtse/CommonLibSSE-NG]CommonLibSSE-NG[/url] without which this would not exist either.[/*]
+[*]The TES modding community at large, for all their amazing work without which I would be much more productive but much sadder as well.[/*]
 [/list]
 
-Source available on [url=https://github.com/manuclementz/SnapOpen]GitHub[/url], GPL-3.0.
+[b][size=4]Source code[/size][/b]
+Source on [url=https://github.com/manuclementz/SnapOpen]GitHub[/url], GPL-3.0.
+[size=1]Note: No gen-AI was used to produce this, I'm already forced to use that shit in my day job and it sucked all the fun out of it. If the code sucks, which is likely, that's entirely on my puny human brain ![/size]
+
+[b][size=4]My other mods[/size][/b]
+[list]
+[*][url=https://www.nexusmods.com/skyrimspecialedition/mods/191266]Wealth of Experience : Gold gives XP[/url][/*]
+[/list]

@@ -6,6 +6,7 @@ param(
 $ErrorActionPreference = "Stop"
 $root = Resolve-Path "$PSScriptRoot\.."
 $projectName = "SnapOpen"
+$projectReleaseName = "Snap Open - Instant doors and containers animations"
 
 $cmakeLists = Get-Content "$root\CMakeLists.txt" -Raw
 if ($cmakeLists -notmatch 'VERSION\s+(\d+\.\d+\.\d+)') {
@@ -51,7 +52,7 @@ New-Item -ItemType Directory -Force -Path $pluginsDir | Out-Null
 Copy-Item $dll "$pluginsDir\$projectName.dll"
 Copy-Item "$root\$projectName.ini" "$pluginsDir\$projectName.ini"
 
-$zipPath = "$OutDir\$projectName-$version.zip"
+$zipPath = "$OutDir\$projectReleaseName-$version.zip"
 if (Test-Path $zipPath) { Remove-Item -Force $zipPath }
 Compress-Archive -Path "$stageDir\*" -DestinationPath $zipPath
 
