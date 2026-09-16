@@ -45,6 +45,12 @@ if(DEFINED OUTPUT_FOLDER)
 
     message(STATUS "SKSE plugin output folder: ${DLL_FOLDER}")
 
+    # Only deploys the ini once - re-running configure shouldn't stomp on settings you've
+    # already changed in-place.
+    if(NOT EXISTS "${DLL_FOLDER}/${PROJECT_NAME}.ini")
+        file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}.ini" DESTINATION "${DLL_FOLDER}")
+    endif()
+
     add_custom_command(
         TARGET "${PROJECT_NAME}"
         POST_BUILD

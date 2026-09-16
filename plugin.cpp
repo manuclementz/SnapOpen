@@ -2,30 +2,44 @@ using namespace SKSE;
 using namespace SKSE::log;
 
 namespace {
-    // High enough that the whole animation resolves within a single rendered frame instead
-    // of visibly playing out over a few - the point isn't "fast", it's "no perceptible
-    // transition at all". Still goes through the engine's normal update loop underneath, so
-    // any sound/script hook tied to a keyframe still fires, just all within that one frame.
+    // pretty much instant, still lets sound/script keyframes fire
     constexpr float kFastAnimationSpeed = 1000.0f;
 
-    // Practically instant without being exactly 0 - some engines treat a hard zero as a
-    // degenerate case in fade/easing math, so this stays just on the safe side of that.
-    // Used for fades going INTO a loading screen.
+    // not literally 0, some fade math gets weird at exactly 0
     constexpr float kInstantFadeSeconds = 0.0001f;
 
-    // Fades coming OUT of a loading screen get this instead: cutting straight to a fully
-    // rendered scene the instant loading finishes reads as a jarring flash rather than a
-    // snappy transition, so these stay short but still perceptible.
-    constexpr float kSlightFadeSeconds = 0.3f;
+    // fade-in after loading, snappy but you can still tell something happened
+    constexpr float kSlightFadeSeconds = 0.15f;
 
-    // Doors/containers don't animate through the Havok behavior graph like actors do - they're
-    // driven by plain NiControllerSequences hanging off the loaded 3D. frequency is the engine's
-    // own playback-speed multiplier for one of those sequences, so cranking it is enough; we
-    // don't need to touch whatever triggers the menu/loading screen once playback finishes.
+    struct Config {
+        bool overrideFadeSettings = true;
+        bool experimentalNpcDoors = false;
+    };
+
+    Config g_config;
+
+    // Data/SKSE/Plugins/<name>.ini, game runs with cwd = its own install root
+    void LoadConfig() {
+        auto path = std::filesystem::path("Data/SKSE/Plugins") /
+                    (std::string(PluginDeclaration::GetSingleton()->GetName()) + ".ini");
+
+        CSimpleIniA ini;
+        ini.SetUnicode();
+        if (ini.LoadFile(path.string().c_str()) < 0) {
+            log::warn("no ini found at {}, using defaults", path.string());
+            return;
+        }
+
+        g_config.overrideFadeSettings = ini.GetBoolValue("Settings", "bOverrideFadeSettings", g_config.overrideFadeSettings);
+        g_config.experimentalNpcDoors = ini.GetBoolValue("Settings", "bExperimentalNPCDoors", g_config.experimentalNpcDoors);
+
+        log::info("overrideFadeSettings={} experimentalNpcDoors={}", g_config.overrideFadeSettings, g_config.experimentalNpcDoors);
+    }
+
     void SetAnimationSpeed(RE::TESObjectREFR& a_refr, float a_speedMultiplier) {
         auto* root = a_refr.Get3D();
         if (!root) {
-            return;  // not currently loaded in (too far away, cell not attached, etc.)
+            return;
         }
 
         for (auto controller = root->controllers.get(); controller; controller = controller->next.get()) {
@@ -41,11 +55,8 @@ namespace {
         }
     }
 
-    // A door only causes a loading screen when it actually hands off to a different cell -
-    // e.g. the two sides of a "double door" prop are linked to each other but stay in the
-    // same cell. ExtraDataType::kTeleport isn't a precise enough signal on its own: the game
-    // tags plenty of same-cell doors as teleporting too (nudging the player a step to the other
-    // side), so we resolve the real destination and compare cells directly instead.
+    // same-cell doors (double doors etc) don't load anything, kTeleport alone isn't enough
+    // to tell - gotta actually resolve the linked door and compare cells
     bool LeadsToADifferentCell(const RE::TESObjectREFR& a_door) {
         const auto* teleport = a_door.extraList.GetByType<RE::ExtraTeleport>();
         if (!teleport || !teleport->teleportData) {
@@ -56,8 +67,6 @@ namespace {
         return destination && destination->GetParentCell() != a_door.GetParentCell();
     }
 
-    // Every setting the engine reads from Skyrim.ini is also a live RE::Setting object we can
-    // read/write from code - no need to make users hand-edit a file themselves.
     void SetINIFloat(std::string_view a_settingName, float a_value) {
         auto* setting = RE::INISettingCollection::GetSingleton()->GetSetting(a_settingName);
         if (!setting) {
@@ -85,8 +94,6 @@ namespace {
         }
     }
 
-    // Fires whenever a reference in the world gets activated - opening a door, opening a
-    // container, talking to an NPC, picking up an item, etc.
     class ActivationEventSink final : public RE::BSTEventSink<RE::TESActivateEvent> {
     public:
         static ActivationEventSink* GetSingleton() {
@@ -100,11 +107,7 @@ namespace {
                 return RE::BSEventNotifyControl::kContinue;
             }
 
-            // NPCs open doors/containers as part of AI packages that may expect the animation
-            // to actually take some time; only the player's own interactions get sped up.
-            if (!a_event->actionRef || !a_event->actionRef->IsPlayerRef()) {
-                return RE::BSEventNotifyControl::kContinue;
-            }
+            const bool isPlayer = a_event->actionRef && a_event->actionRef->IsPlayerRef();
 
             auto* refr = a_event->objectActivated.get();
             auto* baseObject = refr->GetBaseObject();
@@ -114,12 +117,14 @@ namespace {
 
             if (baseObject->As<RE::TESObjectDOOR>()) {
                 log::info("Door activated: {}", refr->GetName());
-                if (LeadsToADifferentCell(*refr)) {
+                if ((isPlayer || g_config.experimentalNpcDoors) && LeadsToADifferentCell(*refr)) {
                     SetAnimationSpeed(*refr, kFastAnimationSpeed);
                 }
             } else if (baseObject->As<RE::TESObjectCONT>()) {
                 log::info("Container activated: {}", refr->GetName());
-                SetAnimationSpeed(*refr, kFastAnimationSpeed);
+                if (isPlayer) {
+                    SetAnimationSpeed(*refr, kFastAnimationSpeed);
+                }
             }
 
             return RE::BSEventNotifyControl::kContinue;
@@ -135,8 +140,6 @@ namespace {
         ~ActivationEventSink() override = default;
     };
 
-    // Initialize spdlog. Writes to a debugger console when attached (e.g. from VS Code/Visual Studio),
-    // otherwise writes to Documents/My Games/Skyrim Special Edition/SKSE/<PluginName>.log
     void InitializeLogging() {
         auto path = log_directory();
         if (!path) {
@@ -164,8 +167,6 @@ namespace {
         if (!GetMessagingInterface()->RegisterListener([](MessagingInterface::Message* message) {
                 switch (message->type) {
                     case MessagingInterface::kDataLoaded:
-                        // All ESM/ESL/ESP plugins have loaded and the main menu is active.
-                        // It's now safe to look up forms, records, etc.
                         log::info("Data loaded.");
                         RE::ScriptEventSourceHolder::GetSingleton()->AddEventSink<RE::TESActivateEvent>(
                             ActivationEventSink::GetSingleton());
@@ -189,7 +190,10 @@ SKSEPluginLoad(const LoadInterface* skse) {
     log::info("{} {} is loading...", plugin->GetName(), plugin->GetVersion());
 
     Init(skse);
-    ShortenLoadingTransitions();
+    LoadConfig();
+    if (g_config.overrideFadeSettings) {
+        ShortenLoadingTransitions();
+    }
     InitializeMessaging();
 
     log::info("{} has finished loading.", plugin->GetName());

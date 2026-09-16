@@ -5,6 +5,7 @@
         "spdlog",
         "directxtk",
         "rapidcsv",
-        "xbyak"
+        "xbyak",
+        "simpleini"
     ]
 }
