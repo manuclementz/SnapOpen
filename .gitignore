@@ -8,6 +8,7 @@ out
 build
 install
 cmake-build*
+dist
 *.dll
 *.pdb
 
