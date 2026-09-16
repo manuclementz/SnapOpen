@@ -9,7 +9,7 @@ namespace {
     constexpr float kInstantFadeSeconds = 0.0001f;
 
     // fade-in after loading
-    constexpr float kSlightFadeSeconds = 0.15f;
+    constexpr float kSlightFadeSeconds = 0.0001f;
 
     struct Config {
         bool overrideFadeSettings = true;
@@ -86,7 +86,7 @@ namespace {
             SetINIFloat(settingName, kInstantFadeSeconds);
         }
 
-        for (auto settingName : {"fFadeToBlackFadeSeconds:General"sv, "fMinSecondsForLoadFadeIn:General"sv}) {
+        for (auto settingName : {"fFadeToBlackFadeSeconds:Interface"sv, "fMinSecondsForLoadFadeIn:Interface"sv}) {
             SetINIFloat(settingName, kSlightFadeSeconds);
         }
     }
