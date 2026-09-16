@@ -9,7 +9,7 @@ namespace {
     constexpr float kInstantFadeSeconds = 0.0001f;
 
     // fade-in after loading
-    constexpr float kSlightFadeSeconds = 0.0001f;
+    constexpr float kSlightFadeSeconds = 0.5000f;
 
     struct Config {
         bool overrideFadeSettings = true;
