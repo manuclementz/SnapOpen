@@ -2,13 +2,13 @@ using namespace SKSE;
 using namespace SKSE::log;
 
 namespace {
-    // pretty much instant, still lets sound/script keyframes fire
+    // perceived as instant in game
     constexpr float kFastAnimationSpeed = 1000.0f;
 
-    // not literally 0, some fade math gets weird at exactly 0
+    // 0 might cause issues, using small value instead
     constexpr float kInstantFadeSeconds = 0.0001f;
 
-    // fade-in after loading, snappy but you can still tell something happened
+    // fade-in after loading
     constexpr float kSlightFadeSeconds = 0.15f;
 
     struct Config {
@@ -18,7 +18,6 @@ namespace {
 
     Config g_config;
 
-    // Data/SKSE/Plugins/<name>.ini, game runs with cwd = its own install root
     void LoadConfig() {
         auto path = std::filesystem::path("Data/SKSE/Plugins") /
                     (std::string(PluginDeclaration::GetSingleton()->GetName()) + ".ini");
@@ -55,8 +54,6 @@ namespace {
         }
     }
 
-    // same-cell doors (double doors etc) don't load anything, kTeleport alone isn't enough
-    // to tell - gotta actually resolve the linked door and compare cells
     bool LeadsToADifferentCell(const RE::TESObjectREFR& a_door) {
         const auto* teleport = a_door.extraList.GetByType<RE::ExtraTeleport>();
         if (!teleport || !teleport->teleportData) {
