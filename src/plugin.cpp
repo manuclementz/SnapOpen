@@ -1,4 +1,4 @@
-using namespace SKSE;
+﻿using namespace SKSE;
 using namespace SKSE::log;
 
 namespace {
@@ -14,10 +14,13 @@ namespace {
     struct Config {
         bool overrideFadeSettings = true;
         bool experimentalNpcDoors = false;
+        bool enableLogging = true;
     };
 
     Config g_config;
 
+    // runs before InitializeLogging(), since it decides whether that even happens - can't log
+    // anything useful here, the config gets echoed to the log afterward instead
     void LoadConfig() {
         auto path = std::filesystem::path("Data/SKSE/Plugins") /
                     (std::string(PluginDeclaration::GetSingleton()->GetName()) + ".ini");
@@ -25,14 +28,12 @@ namespace {
         CSimpleIniA ini;
         ini.SetUnicode();
         if (ini.LoadFile(path.string().c_str()) < 0) {
-            log::warn("no ini found at {}, using defaults", path.string());
             return;
         }
 
         g_config.overrideFadeSettings = ini.GetBoolValue("Settings", "bOverrideFadeSettings", g_config.overrideFadeSettings);
         g_config.experimentalNpcDoors = ini.GetBoolValue("Settings", "bExperimentalNPCDoors", g_config.experimentalNpcDoors);
-
-        log::info("overrideFadeSettings={} experimentalNpcDoors={}", g_config.overrideFadeSettings, g_config.experimentalNpcDoors);
+        g_config.enableLogging = ini.GetBoolValue("Settings", "bEnableLogging", g_config.enableLogging);
     }
 
     void SetAnimationSpeed(RE::TESObjectREFR& a_refr, float a_speedMultiplier) {
@@ -181,13 +182,16 @@ namespace {
 }
 
 SKSEPluginLoad(const LoadInterface* skse) {
-    InitializeLogging();
+    LoadConfig();
+    if (g_config.enableLogging) {
+        InitializeLogging();
+    }
 
     auto* plugin = PluginDeclaration::GetSingleton();
     log::info("{} {} is loading...", plugin->GetName(), plugin->GetVersion());
+    log::info("overrideFadeSettings={} experimentalNpcDoors={}", g_config.overrideFadeSettings, g_config.experimentalNpcDoors);
 
     Init(skse);
-    LoadConfig();
     if (g_config.overrideFadeSettings) {
         ShortenLoadingTransitions();
     }

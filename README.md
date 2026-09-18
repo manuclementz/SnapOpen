@@ -15,6 +15,7 @@ Built on [CommonLibSSE-NG](https://github.com/alandtse/CommonLibSSE-NG) (submodu
 
 - `bOverrideFadeSettings` - also shortens a bunch of Skyrim.ini fade/loading durations. 0 to disable overriding the ini.
 - `bExperimentalNPCDoors` - speeds doors up for NPCs too. Off by default, needs more testing.
+- `bEnableLogging` - 0 to stop writing SnapOpen.log entirely.
 
 ## Building
 

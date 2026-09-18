@@ -36,9 +36,9 @@ set(SKSE_SUPPORT_XBYAK ON CACHE BOOL "Enable trampoline support for function hoo
 add_subdirectory(extern/commonlibsse-ng)
 include(extern/commonlibsse-ng/cmake/CommonLibSSE.cmake) # add_commonlibsse_plugin() isn't auto-included for source builds
 
-add_commonlibsse_plugin(${PROJECT_NAME} SOURCES plugin.cpp)
+add_commonlibsse_plugin(${PROJECT_NAME} SOURCES src/plugin.cpp)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
-target_precompile_headers(${PROJECT_NAME} PRIVATE PCH.h)
+target_precompile_headers(${PROJECT_NAME} PRIVATE src/PCH.h)
 
 if(DEFINED OUTPUT_FOLDER)
     set(DLL_FOLDER "${OUTPUT_FOLDER}/SKSE/Plugins")
